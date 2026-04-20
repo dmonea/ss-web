@@ -147,14 +147,11 @@ class ImageUploader:
         client.on_connect = self.on_connect
         client.on_publish = self.on_publish
 
-        # TODO: For mTLS, uncomment and configure:
-        client.tls_set(
-            ca_certs=CA_CRT,
-            certfile=CLIENT_CRT,
-            keyfile=CLIENT_KEY,
-            tls_version=ssl.PROTOCOL_TLSv1_2,
-        )
-        client.tls_insecure_set(True)
+        ssl_ctx = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        ssl_ctx.load_verify_locations(cafile=CA_CRT)
+        ssl_ctx.load_cert_chain(certfile=CLIENT_CRT, keyfile=CLIENT_KEY)
+        ssl_ctx.check_hostname = False
+        client.tls_set_context(ssl_ctx)
 
         try:
             client.connect(BROKER, PORT, 60)
